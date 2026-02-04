@@ -3,17 +3,26 @@ module Syntax
 layout Layout = WhitespaceAndComment* !>> [\ \t\n\r#];
 lexical WhitespaceAndComment = [\ \t\n\r] | @category="Comment" "#" ![\n]* $;
 
+// With references and TypePal
+
 start syntax Planning 
-    = planning: PersonTasks+ personList
+    = planning:
+    'Persons:' Person+ persons
+    Task+ tasks
 ;
-syntax PersonTasks 
-    = personTasks: 'Person' ID name Task+ tasks
+syntax Person 
+    = person: ID name '{' Role role ',' 'age' INT age '}'
 ;
 syntax Task 
-    = task:
+     = task:
     'Task' Action action
-    'priority' ':' INT prio
+    'person' ID name
+    'priority:' INT prio
     Duration? duration
+;
+syntax Role
+     = manager: 'Manager'
+     | employee: 'Employee' 
 ;
 syntax Duration 
     = duration: 'duration' ':' INT dl TimeUnit unit

@@ -1,23 +1,46 @@
 module Checker
 
 import Syntax;
-import String;
-import Message;
-import util::LanguageServer;
+ 
+extend analysis::typepal::TypePal;
 import ParseTree;
+import String;
 
-Summary check(Planning p ) {
-    overLimit = {<"<a>", pay.src> | /pay:(PaymentAction) `Pay <INT a> euro` := p, toInt("<a>") > 10000};
-    tasks = {<"<prio>", prio.src> | /(Task) `Task <Action action> priority : <INT prio> <Duration? duration>` := p};
-    tasksWithSamePrio = {<n1, p1> | <n1, p1> <- tasks, <n2, p2> <- tasks, n1 == n2, p1 != p2};
-    durations = {<"<dl>", dur.src> | /dur:(Duration) `duration : <INT dl> <TimeUnit unit>` := p, "<unit>" == "min", toInt("<dl>") % 60 == 0};
+data IdRole = personId();
 
-    return summary(p.src,
-        messages = {<l, warning("There is a budget limit of 10000. So <e> is too big. ", l)> 
-                   | e <- overLimit<0>, l <-overLimit[e]} +
-                   {<l, error("Priorities need to be unique: <e> is used somewhere else. ", l)> 
-                   | e <- tasksWithSamePrio<0>, l <-tasksWithSamePrio[e]} +
-                   {<l, warning("Rewrite duration in <toInt(e)/60> hours. ", l)> 
-                   | e <- durations<0>, l <-durations[e]}
-    );
+data AType = personType();
+
+data DefInfo(list[Person] person = []);
+
+data Person = person(str role = "Employee", int age = 0);
+
+public TModel modulesTModelFromTree(Tree pt) {
+    if (pt has top) pt = pt.top;
+    TypePalConfig a = getModulesConfig();
+    c = newCollector("collectAndSolve", pt, a);
+    collect(pt, c);
+    return newSolver(pt, c.run()).run();
 }
+
+private TypePalConfig getModulesConfig() = tconfig(
+      verbose=true,
+      logTModel = true,
+      logAttempts = true,
+      logSolverIterations= true,
+      logSolverSteps = true,
+      isSubType = subtype
+);
+
+void collect(current: (Person) `<ID name> { <Role role> , age <INT age> }`,  Collector c) {
+     dt = defType(personType());
+     dt.person = [person(role="<role>", age=toInt("<age>"))];
+     c.define("<name>", personId(), name, dt);
+}
+
+void collect(current: (Task) `Task <Action action>
+                        'person <ID name> 
+                        'priority: <INT prio>
+                        '<Duration? duration>`,  Collector c) {
+     c.use(name, {personId()});
+}
+
