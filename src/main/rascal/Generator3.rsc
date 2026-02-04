@@ -6,7 +6,6 @@ import List;
 import AST;
 import Syntax;
 import String;
-
 import Parser;
 import Implode;
 
@@ -30,7 +29,7 @@ str generator3(cast) {
 str printTaskWithDuration(ast) {
     rVal = [];
 
-    // Capturamos action y duration (y descartamos prio con _), como hace la guía
+    //sin prio
     for (<a, d> <- [ <action, duration> | /task(action, _, duration) := ast ]) {
         rVal += "<printAction(a)> <printDuration(d)>";
     }
@@ -41,7 +40,7 @@ str printTaskWithDuration(ast) {
 str printTaskWithoutDuration(ast) {
     rVal = [];
 
-    // Sacamos solo action (y descartamos prio y duration con _)
+    
     for (a <- { action | /task(action, _, _) := ast }) {
         rVal += "<printAction(a)>";
     }
@@ -58,10 +57,9 @@ str printAction(action) {
 }
 
 str printDuration(list[Duration] durations) {
-    // duration es opcional en la gramática → aquí llega como lista vacía o lista con 1 elemento
     if (durations == []) return "";
 
-    // tomamos el primero (solo hay 1 en este tutorial)
+  
     dur = durations[0];
 
     u = "";

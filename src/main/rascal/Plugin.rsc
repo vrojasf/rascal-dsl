@@ -10,13 +10,11 @@ import Relation;
 import Syntax;
 import Checker;
 import Generator4;
-
 PathConfig pcfg = getProjectPathConfig(|project://rascaldsl|);
 Language tdslLang = language(pcfg, "TDSL", "tdsl", "Plugin", "contribs");
 
 // gen4 
 data Command = gen4(Tree cst);
-
 set[LanguageService] contribs() = {
   parser(start[Planning] (str program, loc src) {
     return parse(#start[Planning], program, src);
